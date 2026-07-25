@@ -30,4 +30,8 @@ const checkSchedular = cron.schedule('* * * * *', async()=>
     }
 )
 
+const watchListStatusSender=cron.schedule('* * * * *',async()=>{
+    
+})
+
 export {checkSchedular};

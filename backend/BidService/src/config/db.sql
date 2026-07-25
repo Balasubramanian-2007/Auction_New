@@ -23,6 +23,7 @@ CREATE TABLE bids(
 CREATE TABLE participants(
     participant_id SERIAL PRIMARY KEY ,
     user_id INT NOT NULL,
+    username VARCHAR(100),
     auction_id INT REFERENCES auction(auction_id),
     approval_status VARCHAR(30) DEFAULT 'PENDING',
     joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
