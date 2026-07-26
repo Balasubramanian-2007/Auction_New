@@ -16,6 +16,7 @@ CREATE TABLE bids(
     auction_id INT NOT NULL,
     bidder_id INT NOT NULL,
     bid_amount INT NOT NULL,
+    bidstatus VARCHAR(3) NOT NULL, 
     bid_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(auction_id) REFERENCES auction(auction_id)
 )
@@ -25,7 +26,7 @@ CREATE TABLE participants(
     user_id INT NOT NULL,
     username VARCHAR(100),
     auction_id INT REFERENCES auction(auction_id),
-    approval_status VARCHAR(30) DEFAULT 'PENDING',
+    approval_status VARCHAR(30) DEFAULT 'PENDING', --APPROVED / REJECTED
     joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id,auction_id)
 )

@@ -19,10 +19,12 @@ const createAuction=async(req,res)=>{
             return res.json({message:"Start Time must be greater than End Time"});
         }
 
-        await pool.query(
-            "INSERT INTO auction(title,description,initiator_id,starting_price,auction_type,start_time,end_time) VALUES($1,$2,$3,$4,$5,$6,$7)",
+        const newAuction=await pool.query(
+            "INSERT INTO auction(title,description,initiator_id,starting_price,auction_type,start_time,end_time) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING auction_id",
             [title,description,initiator_id,starting_price,auction_type,start_time,end_time]
         );
+        const auction_id=newAuction.rows[0].auction_id;
+        await redis.set(`auction:${auction_id}:high_bid`, starting_price);
         return res.status(201).json({
             message: "Auction scheduled successfully",
         });

@@ -107,7 +107,15 @@ const updateParticipantStatus = async (req, res) => {
             [status, id, target_user_id]
         );
 
+        if (status === 'APPROVED') {
+            await redis.sadd(`auction:${id}:approved_users`, target_user_id);
+        } 
+        else if (status === 'REJECTED') {
+            await redis.srem(`auction:${id}:approved_users`, target_user_id);
+        }
+
         return res.status(200).json({ message: `Participant status updated to ${status}` });
+        
     } catch (err) {
         console.log("Error updating participant status:", err);
         return res.status(500).json({ error: err.message });
