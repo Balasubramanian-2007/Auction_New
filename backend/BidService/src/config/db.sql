@@ -35,6 +35,9 @@ CREATE TABLE participants(
 CREATE TABLE watchlist(
     auction_id INT NOT NULL,
     user_id INT NOT NULL,
+    notified BOOLEAN DEFAULT false,
     FOREIGN KEY(auction_id) REFERENCES auction(auction_id),
     CONSTRAINT UNIQUE(auction_id,user_id)
 )
+
+
