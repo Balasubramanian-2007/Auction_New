@@ -2,14 +2,21 @@ import fs from 'fs';
 import pool from "../config/db.js";
 import path from 'path';
 import redis from '../config/redis.js';
+import { io } from '../server.js';
+import { fileURLToPath } from 'url';
 
 
-const placeBidLua = fs.readFileSync(
-    path.join(process.cwd(), 'src/scripts/placeBid.lua'), 
-    'utf8'
-);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+// 2. Resolve path up one level to 'src', then into 'scripts/placeBid.lua'
+const luaPath = path.join(__dirname, '../scripts/placeBid.lua');
+const placeBidLua = fs.readFileSync(luaPath, 'utf8');
 
+// const placeBidLua = fs.readFileSync(
+//     path.join(process.cwd(), 'src/scripts/placeBid.lua'), 
+//     'utf8'
+// );
 const coreBidding = async(req,res)=>{
     const incoming_bid_amount=req.body.amount;
     const auction_id=req.params.id;
@@ -31,7 +38,13 @@ const coreBidding = async(req,res)=>{
 
         else if (result === 1) {
             const bidstatus="ACC";
-            await pool.query("INSERT INTO bids(auction_id,bidder_id,bid_amount,bidstatus) VALUES($1,$2,$3,$4)",[auction_id,bidder_id,incoming_bid_amount,bidstatus])
+            await pool.query("INSERT INTO bids(auction_id,bidder_id,bid_amount,bidstatus) VALUES($1,$2,$3,$4)",[auction_id,bidder_id,incoming_bid_amount,bidstatus]);
+            io.to(`auction:${auction_id}`).emit('NEW_HIGH_BID', {
+                auction_id,
+                high_bid: incoming_bid_amount,
+                bidder_id,
+                timestamp: new Date()
+            });
             console.log(`Bid is accepted and inserted into bids table by user ${bidder_id} for the Auction ${auction_id} with amount ${incoming_bid_amount}`);
             return res.status(200).json({message:"Bidded Successfully and in 1 st position"});
         } 

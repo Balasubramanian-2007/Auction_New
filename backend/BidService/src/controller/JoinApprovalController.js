@@ -1,4 +1,5 @@
 import pool from '../config/db.js';
+import redis from '../config/redis.js';
 
 const userJoinRequest=async(req,res)=>{
     const auction_id=req.params.id;

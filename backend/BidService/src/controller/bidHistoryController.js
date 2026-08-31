@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 const auctionHistory=async(req,res)=>{
     const {id}=req.params;
     const auctionType= await pool.query("SELECT auction_type FROM auction WHERE auction_id=$1",[id]);
-    if(auctionType.rows[0]==="PVT"){
+    if(auctionType.rows[0].auction_type==="PVT"){
         return privateAuctionHistory(req,res);
     }
     try{
@@ -35,7 +35,7 @@ const auctionHistory=async(req,res)=>{
 const privateAuctionHistory=async(req,res)=>{
     const {id}=req.params;
     const auctionInitiaterID = await pool.query("SELECT initiator_id FROM auction WHERE auction_id=$1",[id]);
-    if (req.user && req.user.userid === auctionInitiaterID.rows[0].initiater_id) {
+    if (req.user && req.user.userid === auctionInitiaterID.rows[0].initiator_id) {
         try{
             const auctionData=await pool.query(
                 "SELECT auction_id,title,description,initiater_id,status,start_time,end_time FROM auction WHERE auction_id=$1",[id]

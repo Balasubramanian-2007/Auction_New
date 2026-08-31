@@ -7,7 +7,7 @@ const {Pool}=pkg;
 const pool=new Pool({
     user:"postgres",
     host:"localhost",
-    database:"AuthForM",
+    database:"BidForM",
     password:process.env.DB_PASSWORD,
     port:5432
 });

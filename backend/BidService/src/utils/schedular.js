@@ -1,37 +1,20 @@
-import pool  from "../config/db";
+import pool from "../config/db.js";
 import cron from 'node-cron';
+import { notificationQueue } from '../queues/notificationQueue.js';
 
-const checkSchedular = cron.schedule('* * * * *', async()=>
-    {
-        console.log("Schedular running for StartTime checking ...");
-        const now = new Date();
-        // const currTime=now.toISOString();
-        try{
-            await pool.query(
-                "UPDATE auction SET status='LIVE' WHERE start_time <= $1",[now]
-            );
-            console.log(`Schedular Updated status for ${now}`);
-        }
-        catch(err){
-            console.log("Error occured in schedular LIVE part");
-            console.log(`Error : ${err}`);
-        }
-        console.log("Schedular running for EndTime checking ...");
-        try{
-            await pool.query(
-                "UPDATE auction SET status='COMPLETED' WHERE status='LIVE' AND end_time <= $1",[now]
-            );
-            console.log(`Schedular Updated status for ${now}`);
-        }
-        catch(err){
-            console.log("Error occured in schedular END part");
-            console.log(`Error : ${err}`);
-        }
+const checkSchedular = cron.schedule('* * * * *', async () => {
+    const now = new Date();
+    try {
+        await pool.query("UPDATE auction SET status='LIVE' WHERE start_time <= $1 AND status='UPCOMING'", [now]);
+        await pool.query("UPDATE auction SET status='COMPLETED' WHERE status='LIVE' AND end_time <= $1", [now]);
+    } catch (err) {
+        console.error("Error in status check cron:", err);
     }
-)
+});
 
-const watchListStatusSender=cron.schedule('* * * * *',async()=>{
-    
-})
+const watchListStatusUpdate = cron.schedule('*/5 * * * *', async () => {
+    console.log("Watchlist Cron triggered: Enqueuing job to BullMQ...");
+    await notificationQueue.add('processWatchlist', { enqueuedAt: new Date() });
+});
 
-export {checkSchedular};
+export { checkSchedular, watchListStatusUpdate };

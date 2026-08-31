@@ -26,6 +26,9 @@ const viewPublicAuctions = async(req,res)=>{
     catch(err){
         console.log("Error retriving from DB in /view endpoint file");
         console.log(`Error : ${err}`);
+        return res.status(500).json({
+            error:"Internal Server Error"
+        });
     }
 }
 

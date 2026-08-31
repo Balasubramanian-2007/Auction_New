@@ -1,4 +1,5 @@
 import pool  from "../config/db.js";
+import redis from "../config/redis.js";
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -16,11 +17,11 @@ const createAuction=async(req,res)=>{
             return res.json({message:"Start Time must be Future"});
         }
         if(start >= end){
-            return res.json({message:"Start Time must be greater than End Time"});
+            return res.json({message:"Start Time must be lesser than End Time"});
         }
 
         const newAuction=await pool.query(
-            "INSERT INTO auction(title,description,initiator_id,starting_price,auction_type,start_time,end_time) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING auction_id",
+            "INSERT INTO auction(title,description,initiator_id,starting_price,auction_type,start_time,end_time,status) VALUES($1,$2,$3,$4,$5,$6,$7,'UPCOMING') RETURNING auction_id",
             [title,description,initiator_id,starting_price,auction_type,start_time,end_time]
         );
         const auction_id=newAuction.rows[0].auction_id;
