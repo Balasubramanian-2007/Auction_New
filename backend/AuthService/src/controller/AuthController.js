@@ -86,7 +86,7 @@ const handleGoogleCallback = async (req, res) => {
         const { email, name, sub } = payload;
 
         try {
-            const manualUserCheck = await pool.query("SELECT userid, username, email_id,role FROM AuthTable WHERE email_id = $1", [email]);
+            const manualUserCheck = await pool.query("SELECT userid, username, email_id, role FROM AuthTable WHERE email_id = $1", [email]);
 
             if (manualUserCheck.rows.length > 0) {
                 const user = manualUserCheck.rows[0];
@@ -95,7 +95,7 @@ const handleGoogleCallback = async (req, res) => {
                 return redirectWithToken(JWTtokenForUser, userData, 'Verified');
             }
 
-            const googleUserCheck = await pool.query("SELECT userid, username, email_id,role FROM googleUserTable WHERE email_id = $1", [email]);
+            const googleUserCheck = await pool.query("SELECT userid, username, email_id, role FROM googleUserTable WHERE email_id = $1", [email]);
 
             if (googleUserCheck.rows.length > 0) {
                 const user = googleUserCheck.rows[0];
@@ -107,7 +107,7 @@ const handleGoogleCallback = async (req, res) => {
             const uniqueUserId = `goo_${sub.substring(0, 10)}`;
             const role = 'user';
             await pool.query(
-                `INSERT INTO googleUserTable (userid, username, email_id, google_sub_id,role) VALUES ($1, $2, $3, $4,$5)`,
+                `INSERT INTO googleUserTable (userid, username, email_id, google_sub_id, role) VALUES ($1, $2, $3, $4, $5)`,
                 [uniqueUserId, name, email, sub, role]
             );
 
@@ -127,20 +127,20 @@ const handleGoogleCallback = async (req, res) => {
 const login=async(req,res)=>{
     const {userID,userPassword}=req.body;
     try{
-        const dbquery=await pool.query("SELECT username,role,password,isverified FROM AuthTable WHERE userid=$1",[userID]);
+        const dbquery=await pool.query("SELECT userid, username, role, password, isverified FROM AuthTable WHERE userid=$1",[userID]);
         const user = dbquery.rows[0];
         if(dbquery.rows.length===0){
             return res.json({message:"User doesn't Exist"});
         }
-        const isMatch=await bcrypt.compare(userPassword,dbquery.rows[0].password);
-        const isverified=dbquery.rows[0].isverified;
+        const isMatch=await bcrypt.compare(userPassword, user.password);
+        const isverified=user.isverified;
         
         if(isMatch && isverified){
-            const JWTtokenForUser=generateToken(userID,user.username,user.role);
+            const JWTtokenForUser=generateToken(user.userid, user.username, user.role);
             return res.json({Token:JWTtokenForUser,
                 Status:"Verified",
                 Message:"You can enter now",
-                user: { user_id: userID, username: user.username, role: user.role }
+                user: { user_id: user.userid, username: user.username, role: user.role }
             });
         }
         else if(!isverified){
@@ -151,7 +151,7 @@ const login=async(req,res)=>{
         }
     }
     catch(err){
-        console.log("There is some error in Login part DB");
+        console.log("There is some error in Login part DB", err);
         return res.sendStatus(500);
     }
 };
@@ -160,11 +160,13 @@ const register=async(req,res)=>{
     const {userid,email_id,password,username,phone_number,address}=req.body;
     const saltRounds=12;
     const hashedPassword=await bcrypt.hash(password,saltRounds);
-    // const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otp=crypto.randomInt(100000,1000000).toString();
+    const role = 'user';
     try{
-        
-        await pool.query("INSERT INTO AuthTable(userid,email_id,password,username,ph_no,address,otp) VALUES($1,$2,$3,$4,$5,$6,$7)",[userid,email_id,hashedPassword,username,phone_number,address,otp]);
+        await pool.query(
+            "INSERT INTO AuthTable(userid,email_id,password,username,ph_no,address,otp,role) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+            [userid,email_id,hashedPassword,username,phone_number,address,otp,role]
+        );
         await sendVerificationEmail(email_id,otp);
         res.json({Status:200,message:"Registered and OTP sent"}); 
     }
@@ -195,7 +197,7 @@ const verifyRegistration=async(req,res)=>{
         }
     }
     catch(err){
-        console.log("There is an error in verifyRegistration");
+        console.log("There is an error in verifyRegistration", err);
         res.sendStatus(500);
     }
 };

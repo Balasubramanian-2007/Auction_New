@@ -36,7 +36,7 @@ const userJoinRequest=async(req,res)=>{
 
 // This is a general endpoint which shows all pending request
 const requestList=async(req,res)=>{
-    const currentUserID=req.user.userid;
+    const currentUserID = req.user.userid;
     try{
         const dbqueryForAllPendingRequests=await pool.query(
             "SELECT user_id,username,approval_status FROM participants WHERE auction_id IN (SELECT auction_id FROM auction WHERE initiator_id=$1) AND approval_status='PENDING'",
@@ -91,7 +91,7 @@ const acceptUserRequest=async(req,res)=>{
 const updateParticipantStatus = async (req, res) => {
     const { id } = req.params; 
     const { target_user_id, status } = req.body; 
-    const currentUserID = req.user.userid; 
+    const currentUserID = Number(req.user.userid); 
 
     try {
         const checkOwner = await pool.query(

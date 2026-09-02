@@ -1,0 +1,14 @@
+.placeholder {
+  padding: 80px 32px;
+  max-width: 640px;
+}
+
+.placeholder__title {
+  font-size: 1.8rem;
+  margin-bottom: 12px;
+}
+
+.placeholder__body {
+  color: var(--color-ink-soft);
+  line-height: 1.6;
+}

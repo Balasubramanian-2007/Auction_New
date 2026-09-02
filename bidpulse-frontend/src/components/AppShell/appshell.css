@@ -1,0 +1,84 @@
+.shell {
+  min-height: 100%;
+  background: var(--color-bg);
+}
+
+.shell-header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-line);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.shell-header__row {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.shell-wordmark {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.shell-nav {
+  display: flex;
+  gap: 26px;
+  flex: 1;
+}
+
+.shell-nav__link {
+  font-size: 0.93rem;
+  color: var(--color-ink-soft);
+  padding: 6px 0;
+  border-bottom: 2px solid transparent;
+}
+
+.shell-nav__link:hover { color: var(--color-ink); }
+
+.shell-nav__link.active {
+  color: var(--color-ink);
+  border-bottom-color: var(--color-accent);
+}
+
+.shell-nav__link--admin { color: var(--color-gold); }
+
+.shell-account {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.shell-account__cta {
+  padding: 9px 18px;
+  font-size: 0.9rem;
+}
+
+.shell-account__menu {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.shell-account__name {
+  font-size: 0.9rem;
+  color: var(--color-ink-soft);
+}
+
+.shell-account__logout {
+  background: none;
+  border: none;
+  color: var(--color-ink-faint);
+  font-size: 0.85rem;
+  padding: 6px 0;
+}
+
+.shell-account__logout:hover { color: var(--color-danger); }
+
+.shell-main {
+  min-height: calc(100vh - 72px);
+}

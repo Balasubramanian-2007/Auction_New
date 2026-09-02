@@ -1,15 +1,26 @@
 import pkg from 'pg';
 import dotenv from 'dotenv';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-dotenv.config();
-const {Pool}=pkg;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const pool=new Pool({
-    user:"postgres",
-    host:"localhost",
-    database:"AuthForM",
-    password:process.env.DB_PASSWORD,
-    port:5432
+dotenv.config({ path: path.resolve(__dirname, '..', '..', '.env') });
+
+const { Pool } = pkg;
+const dbPassword = String(process.env.DB_PASSWORD ?? '');
+
+if (!dbPassword || dbPassword === 'undefined' || dbPassword === 'null') {
+    throw new Error('AuthService DB_PASSWORD is missing or invalid. Check backend/AuthService/.env');
+}
+
+const pool = new Pool({
+    user: 'postgres',
+    host: 'localhost',
+    database: 'AuthForM',
+    password: dbPassword,
+    port: 5432,
 });
 
 export default pool;

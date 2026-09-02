@@ -14,7 +14,7 @@ CREATE TABLE auction(
 CREATE TABLE bids(
     bid_id SERIAL PRIMARY KEY,
     auction_id INT NOT NULL,
-    bidder_id INT NOT NULL,
+    bidder_id VARCHAR(50) NOT NULL,
     bid_amount INT NOT NULL,
     bidstatus VARCHAR(3) NOT NULL, 
     bid_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -23,7 +23,7 @@ CREATE TABLE bids(
 
 CREATE TABLE participants(
     participant_id SERIAL PRIMARY KEY ,
-    user_id INT NOT NULL,
+    user_id vARCHAR(50) NOT NULL,
     username VARCHAR(100),
     auction_id INT REFERENCES auction(auction_id),
     approval_status VARCHAR(30) DEFAULT 'PENDING', --APPROVED / REJECTED

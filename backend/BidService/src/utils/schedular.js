@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import pool from "../config/db.js";
 import cron from 'node-cron';
 import { notificationQueue } from '../queues/notificationQueue.js';
@@ -7,8 +9,9 @@ const checkSchedular = cron.schedule('* * * * *', async () => {
     try {
         await pool.query("UPDATE auction SET status='LIVE' WHERE start_time <= $1 AND status='UPCOMING'", [now]);
         await pool.query("UPDATE auction SET status='COMPLETED' WHERE status='LIVE' AND end_time <= $1", [now]);
-    } catch (err) {
-        console.error("Error in status check cron:", err);
+    } 
+    catch (err) {
+        console.error("Error in status check cron:",err);
     }
 });
 
