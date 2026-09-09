@@ -13,10 +13,17 @@ export const watchRequest=async(req,res)=>{
                 message:"No such Auction exist"
             });
         }
+
         if(auctionTypeChecker.rows[0].auction_type==="PVT"){
-            return res.json({
-                message:"This is a private auction . You can't able to add it to watchlist"
-            });
+            const approvedCheck = await pool.query(
+                "SELECT 1 FROM participants WHERE auction_id=$1 AND user_id=$2 AND watch_status='APPROVED'",
+                [id, user_id]
+            );
+            if(approvedCheck.rows.length===0){
+                return res.status(403).json({
+                    message:"You need the seller's approval before you can watch this private auction"
+                });
+            }
         }
 
         const checkExistence=await pool.query("SELECT * FROM watchlist WHERE auction_id=$1 AND user_id=$2",[id,user_id]);
@@ -38,15 +45,13 @@ export const watchRequest=async(req,res)=>{
         
     }
     catch (err) {
-        // Detailed console logging to view full error stack trace
-        console.error("❌ Error in watchlistController.js:", err.message);
+        console.error("Error in watchlistController.js:", err.message);
         console.error(err.stack);
         
         return res.status(500).json({
             error: err.message || "Internal Server Error in watchlist"
         });
     }
-
 }
 
 export const getMyWatchlist = async (req, res) => {

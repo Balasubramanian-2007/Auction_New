@@ -13,9 +13,9 @@ const viewPublicAuctions = async(req,res)=>{
                         ELSE 'ENDED'
                     END as actual_status,
                     (SELECT MAX(bid_amount) FROM bids WHERE auction_id = auction.auction_id) as high_bid
-             FROM auction 
-             WHERE auction_type='PUB' AND end_time > NOW() 
-             ORDER BY start_time ASC`
+            FROM auction 
+            WHERE end_time > NOW() 
+            ORDER BY start_time ASC`
         );
 
         if(publicAuctionsList.rows.length===0){
@@ -86,6 +86,7 @@ const viewAllAuctionsAdmin = async(req,res)=>{
         return res.status(500).json({ message: "Unable to retrieve auctions" });
     }
 }
+/*
 const getAuctionById = async (req, res) => {
     const { id } = req.params;
     try {
@@ -126,6 +127,37 @@ const getAuctionById = async (req, res) => {
         }
 
         return res.json({ message: "Auction retrieved", data: auction });
+    } catch (err) {
+        console.error("Error retrieving auction by id:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+*/
+
+const getAuctionById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const auctionQuery = await pool.query(
+            `SELECT auction_id, title, description, initiator_id, starting_price,
+                    auction_type, status, start_time, end_time, created_at,
+                    CASE
+                        WHEN status = 'CANCELLED' THEN 'CANCELLED'
+                        WHEN status = 'COMPLETED' THEN 'COMPLETED'
+                        WHEN start_time > NOW() THEN 'UPCOMING'
+                        WHEN end_time > NOW() THEN 'LIVE'
+                        ELSE 'COMPLETED'
+                    END as actual_status,
+                    (SELECT MAX(bid_amount) FROM bids WHERE auction_id = auction.auction_id) as high_bid,
+                    (SELECT COUNT(*) FROM bids WHERE auction_id = auction.auction_id) as total_bids
+             FROM auction WHERE auction_id = $1`,
+            [id]
+        );
+
+        if (auctionQuery.rows.length === 0) {
+            return res.status(404).json({ message: "Auction not found" });
+        }
+
+        return res.json({ message: "Auction retrieved", data: auctionQuery.rows[0] });
     } catch (err) {
         console.error("Error retrieving auction by id:", err);
         return res.status(500).json({ message: "Internal Server Error" });

@@ -52,6 +52,7 @@ import app from './app.js';
 import pool from './config/db.js';
 import redis from './config/redis.js';
 import { checkSchedular, watchListStatusUpdate } from './utils/schedular.js';
+import { startNotificationWorker } from './workers/notificationWorker.js';
 // 1. Import the Socket.io Server class
 import { Server } from 'socket.io';
 
@@ -82,9 +83,10 @@ io.on('connection', (socket) => {
 try {
     checkSchedular.start();
     watchListStatusUpdate.start();
-    console.log('Cron schedulers initialized successfully.');
+    startNotificationWorker();
+    console.log('Cron schedulers and notification worker initialized successfully.');
 } catch (err) {
-    console.error('Failed to start cron schedulers:', err);
+    console.error('Failed to start cron schedulers or notification worker:', err);
 }
 
 const shutdown = async (signal) => {

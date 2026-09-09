@@ -101,7 +101,7 @@ const endAuctionManually = async (req, res) => {
 
         // 4. Update status in PostgreSQL DB
         await pool.query(
-            "UPDATE auction SET status = 'COMPLETED', updated_at = NOW() WHERE auction_id = $1",
+            "UPDATE auction SET status = 'COMPLETED' WHERE auction_id = $1",
             [id]
         );
 

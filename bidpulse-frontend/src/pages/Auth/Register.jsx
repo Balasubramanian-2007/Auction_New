@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { isValidPhoneNumber } from '../../utils/validators';
 import './auth.css';
 
 const emptyForm = {
@@ -24,6 +25,12 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!isValidPhoneNumber(form.phone_number)) {
+      setError('Phone number must be exactly 10 digits.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const result = await register(form);
@@ -73,7 +80,18 @@ export default function Register() {
           <div className="field-row">
             <div className="field">
               <label htmlFor="phone_number">Phone number</label>
-              <input id="phone_number" required value={form.phone_number} onChange={update('phone_number')} />
+              <input
+                id="phone_number"
+                required
+                inputMode="numeric"
+                maxLength={10}
+                value={form.phone_number}
+                onChange={(e) => setForm((f) => ({ ...f, phone_number: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+                placeholder="10 digits"
+              />
+              {form.phone_number && !isValidPhoneNumber(form.phone_number) && (
+                <span className="field-hint field-hint--error">Must be exactly 10 digits</span>
+              )}
             </div>
             <div className="field">
               <label htmlFor="address">Address</label>

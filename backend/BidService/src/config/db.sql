@@ -40,4 +40,14 @@ CREATE TABLE watchlist(
     CONSTRAINT UNIQUE(auction_id,user_id)
 )
 
-
+CREATE TABLE shipment_proofs (
+    id SERIAL PRIMARY KEY,
+    auction_id INT NOT NULL REFERENCES auction(auction_id),
+    seller_id VARCHAR(50) NOT NULL,
+    receipt_photo_url TEXT,
+    courier_name VARCHAR(100) NOT NULL,
+    tracking_number VARCHAR(100) NOT NULL,
+    notes TEXT,
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(auction_id)
+);ī

@@ -40,39 +40,6 @@
   gap: 16px;
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field label {
-  font-size: 0.85rem;
-  color: var(--color-ink-soft);
-}
-
-.field input,
-.field textarea {
-  padding: 11px 13px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg);
-  color: var(--color-ink);
-}
-
-.field input:focus,
-.field textarea:focus {
-  outline: none;
-  border-color: var(--color-accent);
-  background: var(--color-surface);
-}
-
-.field-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
 .auth-submit {
   margin-top: 6px;
   width: 100%;

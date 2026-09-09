@@ -2,7 +2,6 @@
 import pool from "../config/db.js";
 
 const getUserInfo=async(req,res)=>{
-    // ids is an array of user ID's 
     if(req.user.role!=='admin'){
         return res.status(403).json({
             message:"UnAuthorized ... You don't have rights to access this data"
@@ -17,8 +16,14 @@ const getUserInfo=async(req,res)=>{
         });
     }
     try{
-        const userEmailDataFromCustomAuth=await pool.query("SELECT user_id,email FROM AuthTable WHERE user_id=ANY($1)",[userids]);
-        const userEmailDataFromOAuth=await pool.query("SELECT user_id,email FROM googleUserTable WHERE user_id=ANY($1)",[userids]);
+        const userEmailDataFromCustomAuth = await pool.query(
+            "SELECT userid AS user_id, email_id AS email FROM AuthTable WHERE userid = ANY($1)",
+            [userids]
+        );
+        const userEmailDataFromOAuth = await pool.query(
+            "SELECT userid AS user_id, email_id AS email FROM googleUserTable WHERE userid = ANY($1)",
+            [userids]
+        );
 
         const finalUserEmailIDs=[
             ...userEmailDataFromCustomAuth.rows,
@@ -31,12 +36,12 @@ const getUserInfo=async(req,res)=>{
                 data:finalUserEmailIDs
             });
         }
+
         else{
             return res.status(404).json({
                 message:"Not all user email IDs found ..."
             });
         }
-        
     }
     catch(err){
         console.log("Error in retriving data from DB ... Error occured in userInfo.js");

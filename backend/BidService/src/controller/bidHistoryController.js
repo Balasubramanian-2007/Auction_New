@@ -68,26 +68,10 @@ const getAuctionBidLog = async (req, res) => {
     const { id } = req.params;
     try {
         const auctionCheck = await pool.query(
-            "SELECT auction_type, initiator_id FROM auction WHERE auction_id=$1", [id]
+            "SELECT auction_type FROM auction WHERE auction_id=$1", [id]
         );
         if (auctionCheck.rows.length === 0) {
             return res.status(404).json({ message: "Auction not found" });
-        }
-        const { auction_type, initiator_id } = auctionCheck.rows[0];
-
-        if (auction_type === 'PVT') {
-            const isOwner = req.user.userid === initiator_id;
-            let isApproved = false;
-            if (!isOwner) {
-                const approvedCheck = await pool.query(
-                    "SELECT 1 FROM participants WHERE auction_id=$1 AND user_id=$2 AND approval_status='APPROVED'",
-                    [id, req.user.userid]
-                );
-                isApproved = approvedCheck.rows.length > 0;
-            }
-            if (!isOwner && !isApproved) {
-                return res.status(403).json({ message: "Unauthorized to view this private auction's bid log" });
-            }
         }
 
         const bids = await pool.query(

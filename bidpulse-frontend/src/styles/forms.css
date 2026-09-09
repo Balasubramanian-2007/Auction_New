@@ -1,0 +1,89 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.field label {
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+}
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 96px;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  background: var(--color-surface);
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--color-ink-faint);
+}
+
+.field-hint--error {
+  color: var(--color-danger);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.radio-row {
+  display: flex;
+  gap: 20px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+}
+
+.radio-option input { width: auto; }
+
+.file-drop {
+  border: 1px dashed var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  text-align: center;
+  background: var(--color-bg);
+  cursor: pointer;
+}
+
+.file-drop input { display: none; }
+
+.file-drop__label {
+  font-size: 0.9rem;
+  color: var(--color-ink-soft);
+}
+
+.file-drop__preview {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: var(--color-accent);
+}

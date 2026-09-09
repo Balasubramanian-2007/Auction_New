@@ -1,0 +1,29 @@
+.status-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+.status-badge--upcoming {
+  background: var(--color-gold-soft);
+  color: var(--color-gold);
+}
+
+.status-badge--live {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.status-badge--completed {
+  background: var(--color-line);
+  color: var(--color-ink-soft);
+}
+
+.status-badge--cancelled {
+  background: var(--color-line);
+  color: var(--color-ink-faint);
+  text-decoration: line-through;
+}
