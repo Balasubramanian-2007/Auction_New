@@ -136,7 +136,7 @@ export default function CreateAuction() {
             </label>
           </div>
         </div>
-        <p className="field-hint">Media upload isn't connected to storage yet — it's captured here so the form is ready once that's wired up.</p>
+        <p className="field-hint">Media upload isn't connected to storage yet - it's captured here so the form is ready once that's wired up.</p>
 
         <button className="btn btn--primary auth-submit" type="submit" disabled={submitting}>
           {submitting ? 'Creating…' : 'Create auction'}

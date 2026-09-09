@@ -34,7 +34,7 @@ export default function Login() {
     if (params.get('expired')) {
       setInfo('Your session expired. Please log in again.');
     } else if (location.state?.justVerified) {
-      setInfo('Account verified — you can log in now.');
+      setInfo('Account verified - you can log in now.');
     }
   }, [location, completeOAuthSession, navigate]);
 

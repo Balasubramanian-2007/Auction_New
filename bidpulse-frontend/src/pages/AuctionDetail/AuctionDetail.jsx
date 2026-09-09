@@ -325,7 +325,7 @@ export default function AuctionDetail() {
           )}
 
           {!isOwner && isApproved && status === 'UPCOMING' && (
-            <p className="field-hint">You're approved — bidding opens once this auction goes live.</p>
+            <p className="field-hint">You're approved , bidding opens once this auction goes live.</p>
           )}
 
           {/* 1. Public auctions: anyone can toggle watchlist */}
@@ -538,7 +538,7 @@ export default function AuctionDetail() {
       <div className="auction-detail__bids">
         <h2 className="auction-detail__bids-title">Bid history</h2>
         {bids.length === 0 ? (
-          <p className="state-loading">No bids yet — be the first.</p>
+          <p className="state-loading">No bids yet ! Be the first.</p>
         ) : (
           <table className="data-table">
             <thead>

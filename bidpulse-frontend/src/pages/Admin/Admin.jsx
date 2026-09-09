@@ -92,7 +92,7 @@ export default function Admin() {
                 <td>{a.title}</td>
                 <td>{a.initiator_id}</td>
                 <td><StatusBadge status={a.actual_status} /></td>
-                <td>{a.high_bid ? `$${Number(a.high_bid).toLocaleString()}` : '—'}</td>
+                <td>{a.high_bid ? `$${Number(a.high_bid).toLocaleString()}` : '-'}</td>
                 <td>{a.total_bids}</td>
                 <td className="action-row">
                   {STATUS_OPTIONS.map((status) => (

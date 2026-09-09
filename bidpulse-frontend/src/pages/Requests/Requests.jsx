@@ -91,7 +91,7 @@ export default function Requests() {
                         </button>
                       </div>
                     ) : (
-                      <span>{r.approval_status || '—'}</span>
+                      <span>{r.approval_status || '-'}</span>
                     )}
                   </td>
                   <td>
@@ -113,7 +113,7 @@ export default function Requests() {
                         </button>
                       </div>
                     ) : (
-                      <span>{r.watch_status || '—'}</span>
+                      <span>{r.watch_status || '-'}</span>
                     )}
                   </td>
                 </tr>

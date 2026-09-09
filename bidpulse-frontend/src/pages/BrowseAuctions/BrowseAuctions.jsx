@@ -38,7 +38,7 @@ export default function BrowseAuctions() {
       {!loading && !error && auctions.length === 0 && (
         <div className="empty-state">
           <p className="empty-state__title">No public auctions yet</p>
-          <p>Be the first to list something — use "Sell an item" above.</p>
+          <p>Be the first to list something - use "Sell an item" above.</p>
         </div>
       )}
 

@@ -22,7 +22,7 @@ export default function Landing() {
               Every lot has a story.<br />Yours starts with the bid.
             </h1>
             <p className="hero__sub">
-              BidPulse brings the pace of a real auction room online — live counters,
+              BidPulse brings the pace of a real auction room online - live counters,
               verified participants, and a closing bell that means something. List an
               item, open the floor, and watch the price find its true value.
             </p>
@@ -70,7 +70,7 @@ export default function Landing() {
               <p className="how__index">2</p>
               <h3 className="how__title">Bid in real time</h3>
               <p className="how__body">
-                Place a bid and watch the floor move — the current high bid updates
+                Place a bid and watch the floor move - the current high bid updates
                 instantly for everyone watching, no refresh required.
               </p>
             </div>
@@ -91,7 +91,7 @@ export default function Landing() {
           <div className="roles__card">
             <h3 className="roles__title">List something</h3>
             <p className="roles__body">
-              Any account can open an auction — public or invitation-only. Set your
+              Any account can open an auction - public or invitation-only. Set your
               opening price, your window, and approve who's allowed to bid.
             </p>
           </div>
