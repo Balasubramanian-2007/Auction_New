@@ -126,6 +126,13 @@ export default function AuctionDetail() {
   const targetTime = status === 'UPCOMING' ? auction?.start_time : auction?.end_time;
   const { label: countdownLabel, expired } = useCountdown(status === 'COMPLETED' || status === 'CANCELLED' ? null : targetTime);
 
+  useEffect(() => {
+    if (!expired) return;
+    if (status === 'COMPLETED' || status === 'CANCELLED') return;
+    loadAuction();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expired]);
+
   const isPrivate = auction?.auction_type === 'PVT';
   const isApproved = participation?.approval_status === 'APPROVED';
   const isPending = participation?.requested && participation?.approval_status === 'PENDING';

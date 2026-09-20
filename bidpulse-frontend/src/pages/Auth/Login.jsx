@@ -88,7 +88,7 @@ export default function Login() {
         <div className="auth-divider">or</div>
 
         <button type="button" className="btn btn--google" onClick={loginWithGoogle}>
-          Continue with Google
+          Continue with Google(🇬)
         </button>
 
         <p className="auth-footer-link">

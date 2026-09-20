@@ -23,6 +23,28 @@ const coreBidding = async(req,res)=>{
     const bidder_id=req.user.userid;
 
     try{
+        const auctionCheck = await pool.query(
+            "SELECT status, start_time, end_time FROM auction WHERE auction_id=$1",
+            [auction_id]
+        );
+
+        if (auctionCheck.rows.length === 0) {
+            return res.status(404).json({ message: "Auction not found" });
+        }
+
+        const { status, start_time, end_time } = auctionCheck.rows[0];
+        const now = new Date();
+
+        if (status === 'CANCELLED' || status === 'COMPLETED') {
+            return res.status(400).json({ message: "This auction is no longer accepting bids" });
+        }
+        if (new Date(start_time) > now) {
+            return res.status(400).json({ message: "This auction hasn't started yet" });
+        }
+        if (new Date(end_time) <= now) {
+            return res.status(400).json({ message: "This auction has already ended" });
+        }
+
         const result = await redis.eval(
             placeBidLua,
             2, 
