@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import bidRoutes from './routes/bidRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 
 const app = express();
 app.use(cors());
@@ -12,6 +13,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/v1', bidRoutes);
+app.use('/api/v1', paymentRoutes);
 
 app.use((req, res) => {
     res.status(404).json({ message: 'Route not found' });

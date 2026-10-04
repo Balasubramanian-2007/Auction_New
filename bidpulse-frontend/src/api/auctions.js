@@ -34,3 +34,8 @@ export const getMyParticipation = (id) => bidApi.get(`/auctions/${id}/my-partici
 // --- Shipment Proof ---
 export const submitShipmentProof = (id, payload) => bidApi.post(`/auctions/${id}/shipment-proof`, payload);
 export const getShipmentProof = (id) => bidApi.get(`/auctions/${id}/shipment-proof`);
+
+// --- Payments (Razorpay Simulation) ---
+export const createPaymentOrder = (id) => bidApi.post(`/auctions/${id}/payment/order`);
+export const verifyPayment = (id, payload) => bidApi.post(`/auctions/${id}/payment/verify`, payload);
+export const getPaymentStatus = (id) => bidApi.get(`/auctions/${id}/payment/status`);

@@ -12,6 +12,9 @@ import {
   endAuctionManually,
   submitShipmentProof,
   getShipmentProof,
+  createPaymentOrder,
+  verifyPayment,
+  getPaymentStatus,
 } from '../../api/auctions';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
@@ -44,6 +47,11 @@ export default function AuctionDetail() {
   const [shipmentPhoto, setShipmentPhoto] = useState(null);
   const [submittingShipment, setSubmittingShipment] = useState(false);
   const [shipmentError, setShipmentError] = useState('');
+
+  // Payment states (Razorpay Test Mode simulation)
+  const [payment, setPayment] = useState(null);
+  const [paying, setPaying] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
 
   const isOwner = auction && user && String(auction.initiator_id) === String(user.user_id);
 
@@ -93,6 +101,13 @@ export default function AuctionDetail() {
       .catch(() => {});
   }, [id, user]);
 
+  const loadPaymentStatus = useCallback(() => {
+    if (!user) return;
+    getPaymentStatus(id)
+      .then(({ data }) => setPayment(data))
+      .catch(() => {});
+  }, [id, user]);
+
   useEffect(() => { loadAuction(); }, [loadAuction]);
   useEffect(() => { loadParticipation(); }, [loadParticipation]);
   useEffect(() => { loadWatchlistStatus(); }, [loadWatchlistStatus]);
@@ -100,8 +115,9 @@ export default function AuctionDetail() {
     const s = auction?.actual_status || auction?.status;
     if (s === 'COMPLETED') {
       loadShipmentProof();
+      loadPaymentStatus();
     }
-  }, [auction, loadShipmentProof]);
+  }, [auction, loadShipmentProof, loadPaymentStatus]);
 
   // Live updates: join this auction's room and listen for new high bids.
   // Requires a `join-auction` handler on BidService's socket server.
@@ -170,6 +186,69 @@ export default function AuctionDetail() {
       setShipmentError(err.response?.data?.message || 'Could not submit shipment proof.');
     } finally {
       setSubmittingShipment(false);
+    }
+  };
+
+  const winningBid = bids.find((b) => b.bidstatus === 'ACC');
+  const isWinner = Boolean(user && winningBid && String(winningBid.bidder_id) === String(user.user_id));
+
+  const handlePayNow = async () => {
+    setPaying(true);
+    setPaymentError('');
+    setActionError('');
+    try {
+      const { data } = await createPaymentOrder(id);
+      const options = {
+        key: data.key_id,
+        amount: data.amount,
+        currency: data.currency,
+        name: 'BidPulse',
+        description: `Winning bid payment for "${auction.title}"`,
+        order_id: data.order_id,
+        handler: async (response) => {
+          try {
+            await verifyPayment(id, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            setActionMessage('Payment verified successfully in test mode!');
+            loadPaymentStatus();
+            loadAuction();
+          } catch (vErr) {
+            setPaymentError(vErr.response?.data?.message || 'Payment verification failed.');
+          }
+        },
+        prefill: {
+          name: user?.username || '',
+          email: user?.email || '',
+        },
+        theme: {
+          color: '#1d4ed8',
+        },
+        modal: {
+          ondismiss: () => {
+            setPaying(false);
+          },
+        },
+      };
+
+      if (!window.Razorpay) {
+        setPaymentError('Razorpay checkout SDK failed to load. Please check your connection.');
+        setPaying(false);
+        return;
+      }
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', (failResp) => {
+        setPaymentError(failResp.error?.description || 'Payment simulation failed.');
+        setPaying(false);
+      });
+      rzp.open();
+    } catch (err) {
+      setPaymentError(err.response?.data?.message || 'Could not initiate payment.');
+    } finally {
+      setPaying(false);
     }
   };
 
@@ -374,6 +453,64 @@ export default function AuctionDetail() {
                 {watching ? 'Remove from watchlist' : 'Add to watchlist'}
               </button>
             </div>
+          )}
+
+          {/* Post-auction Simulated Payment Step (Razorpay Test Mode) */}
+          {status === 'COMPLETED' && (
+            <>
+              {/* Winner View */}
+              {isWinner && (
+                <div className={`payment-panel ${payment?.status === 'PAID' ? 'payment-panel--paid' : ''}`}>
+                  <div className="payment-panel__header">
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <strong>{payment?.status === 'PAID' ? 'Winning Bid Payment' : 'You won this auction!'}</strong>
+                        <span className={`payment-badge ${payment?.status === 'PAID' ? 'payment-badge--paid' : ''}`}>
+                          {payment?.status === 'PAID' ? 'Paid ✓' : 'Payment Required'}
+                        </span>
+                      </div>
+                      <p className="field-hint">
+                        {payment?.status === 'PAID'
+                          ? `Simulated test payment completed. Payment ID: ${payment.data?.razorpay_payment_id || 'N/A'}`
+                          : 'Complete the simulated Razorpay test-mode payment for this lot.'}
+                      </p>
+                    </div>
+                    {payment?.status !== 'PAID' ? (
+                      <button className="btn btn--primary" onClick={handlePayNow} disabled={paying}>
+                        {paying ? 'Opening Checkout…' : `Pay Now ($${Number(winningBid.bid_amount).toLocaleString()})`}
+                      </button>
+                    ) : (
+                      <span className="payment-panel__amount">${Number(winningBid.bid_amount).toLocaleString()}</span>
+                    )}
+                  </div>
+                  {paymentError && <div className="state-banner state-banner--error">{paymentError}</div>}
+                </div>
+              )}
+
+              {/* Seller View */}
+              {isOwner && (
+                <div className={`payment-panel ${payment?.status === 'PAID' ? 'payment-panel--paid' : ''}`}>
+                  <div className="payment-panel__header">
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <strong>Buyer Payment Status</strong>
+                        <span className={`payment-badge ${payment?.status === 'PAID' ? 'payment-badge--paid' : ''}`}>
+                          {payment?.status === 'PAID' ? 'Payment Received ✓' : 'Awaiting Payment'}
+                        </span>
+                      </div>
+                      <p className="field-hint">
+                        {payment?.status === 'PAID'
+                          ? `Winning bidder has simulated payment (${payment.data?.razorpay_payment_id || 'PAID'}).`
+                          : 'The winning bidder has not completed test payment yet.'}
+                      </p>
+                    </div>
+                    {payment?.status === 'PAID' && (
+                      <span className="payment-panel__amount">${Number(payment.data?.amount || auction.high_bid).toLocaleString()}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Post-auction Mandatory Shipment Proof Section */}
