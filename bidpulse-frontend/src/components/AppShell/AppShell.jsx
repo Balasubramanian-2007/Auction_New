@@ -21,6 +21,7 @@ export default function AppShell() {
             <NavLink to="/my-auctions" className="shell-nav__link">My Auctions</NavLink>
             <NavLink to="/watchlist" className="shell-nav__link">Watchlist</NavLink>
             <NavLink to="/requests" className="shell-nav__link">Requests</NavLink>
+            <NavLink to="/search" className="shell-nav__link">People</NavLink>
             {isAdmin && <NavLink to="/admin" className="shell-nav__link shell-nav__link--admin">Admin</NavLink>}
           </nav>
           <div className="shell-account">

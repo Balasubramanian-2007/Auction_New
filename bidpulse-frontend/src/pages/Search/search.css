@@ -1,0 +1,86 @@
+.search-box {
+  margin-bottom: 2rem;
+}
+
+.search-box__input {
+  width: 100%;
+  max-width: 600px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  outline: none;
+  background: var(--bg-surface, #ffffff);
+  color: var(--text-main, #1a202c);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.search-box__input:focus {
+  border-color: var(--primary, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.user-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.user-card {
+  padding: 1.25rem;
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.user-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.user-card__name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-main, #1a202c);
+  margin: 0;
+}
+
+.user-card__id {
+  font-size: 0.85rem;
+  color: var(--text-muted, #718096);
+}
+
+.user-card__email {
+  font-size: 0.9rem;
+  color: var(--text-muted, #4a5568);
+  word-break: break-all;
+}
+
+.rating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.rating-badge--positive {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.rating-badge--neutral {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}

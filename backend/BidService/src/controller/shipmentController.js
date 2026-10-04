@@ -118,7 +118,7 @@ export const submitShipmentProof = async (req, res) => {
 
 /**
  * Get shipment proof for an auction (if submitted), along with deadline and overdue status.
- * Any authenticated user can view this.
+ * Only the seller (initiator) and the winning bidder can view this.
  */
 export const getShipmentProof = async (req, res) => {
     const { id } = req.params;
@@ -134,6 +134,20 @@ export const getShipmentProof = async (req, res) => {
         }
 
         const auction = auctionRes.rows[0];
+
+        const winningBidRes = await pool.query(
+            "SELECT bidder_id FROM bids WHERE auction_id = $1 AND bidstatus = 'ACC' ORDER BY bid_amount DESC LIMIT 1",
+            [id]
+        );
+
+        const winnerId = winningBidRes.rows.length > 0 ? winningBidRes.rows[0].bidder_id : null;
+        const isSeller = String(req.user.userid) === String(auction.initiator_id);
+        const isWinner = winnerId && String(req.user.userid) === String(winnerId);
+
+        if (!isSeller && !isWinner) {
+            return res.status(403).json({ message: "Only the seller and the winning bidder can view shipment proof" });
+        }
+
         const endTime = new Date(auction.end_time);
         const deadline = new Date(endTime.getTime() + 3 * 60 * 60 * 1000);
         const now = new Date();

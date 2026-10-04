@@ -10,6 +10,7 @@ import AuctionDetail from './pages/AuctionDetail/AuctionDetail';
 import MyAuctions from './pages/MyAuctions/MyAuctions';
 import Watchlist from './pages/Watchlist/Watchlist';
 import Requests from './pages/Requests/Requests';
+import Search from './pages/Search/Search';
 import Admin from './pages/Admin/Admin';
 import Placeholder from './pages/Placeholder/Placeholder';
 import { ProtectedRoute, AdminRoute, GuestOnlyRoute } from './routes/guards';
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/my-auctions/:id/requests" element={<Requests />} />
           <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/requests" element={<Requests />} />
+          <Route path="/search" element={<Search />} />
           <Route element={<AdminRoute />}>
             <Route path="/admin" element={<Admin />} />
           </Route>

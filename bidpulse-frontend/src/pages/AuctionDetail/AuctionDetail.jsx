@@ -16,6 +16,11 @@ import {
   verifyPayment,
   getPaymentStatus,
 } from '../../api/auctions';
+import {
+  getMyRatingStatus,
+  submitRating,
+  getSellerRating,
+} from '../../api/ratings';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 import { useCountdown } from '../../hooks/useCountdown';
@@ -53,7 +58,17 @@ export default function AuctionDetail() {
   const [paying, setPaying] = useState(false);
   const [paymentError, setPaymentError] = useState('');
 
+  // Wilson-score rating states
+  const [ratingStatus, setRatingStatus] = useState(null);
+  const [sellerRating, setSellerRating] = useState(null);
+  const [selectedStars, setSelectedStars] = useState(5);
+  const [submittingRating, setSubmittingRating] = useState(false);
+  const [ratingError, setRatingError] = useState('');
+  const [ratingMessage, setRatingMessage] = useState('');
+
   const isOwner = auction && user && String(auction.initiator_id) === String(user.user_id);
+  const winningBid = bids.find((b) => b.bidstatus === 'ACC');
+  const isWinner = Boolean(user && winningBid && String(winningBid.bidder_id) === String(user.user_id));
 
   const loadAuction = useCallback(() => {
     setLoading(true);
@@ -108,16 +123,37 @@ export default function AuctionDetail() {
       .catch(() => {});
   }, [id, user]);
 
+  const loadRatingStatus = useCallback(() => {
+    if (!user) return;
+    getMyRatingStatus(id)
+      .then(({ data }) => setRatingStatus(data.data || data))
+      .catch(() => {});
+  }, [id, user]);
+
+  const loadSellerRating = useCallback(() => {
+    if (!auction?.initiator_id) return;
+    getSellerRating(auction.initiator_id)
+      .then(({ data }) => setSellerRating(data.data || data))
+      .catch(() => {});
+  }, [auction?.initiator_id]);
+
   useEffect(() => { loadAuction(); }, [loadAuction]);
   useEffect(() => { loadParticipation(); }, [loadParticipation]);
   useEffect(() => { loadWatchlistStatus(); }, [loadWatchlistStatus]);
+  useEffect(() => { loadSellerRating(); }, [loadSellerRating]);
+
   useEffect(() => {
     const s = auction?.actual_status || auction?.status;
     if (s === 'COMPLETED') {
-      loadShipmentProof();
+      if (isOwner || isWinner) {
+        loadShipmentProof();
+      }
       loadPaymentStatus();
+      if (isWinner) {
+        loadRatingStatus();
+      }
     }
-  }, [auction, loadShipmentProof, loadPaymentStatus]);
+  }, [auction, isOwner, isWinner, loadShipmentProof, loadPaymentStatus, loadRatingStatus]);
 
   // Live updates: join this auction's room and listen for new high bids.
   // Requires a `join-auction` handler on BidService's socket server.
@@ -189,8 +225,26 @@ export default function AuctionDetail() {
     }
   };
 
-  const winningBid = bids.find((b) => b.bidstatus === 'ACC');
-  const isWinner = Boolean(user && winningBid && String(winningBid.bidder_id) === String(user.user_id));
+  const { label: ratingCountdownLabel, expired: ratingExpired } = useCountdown(
+    ratingStatus?.canRate ? ratingStatus.windowClosesAt : null
+  );
+
+  const handleRatingSubmit = async (e) => {
+    e.preventDefault();
+    setRatingError('');
+    setRatingMessage('');
+    setSubmittingRating(true);
+    try {
+      const { data } = await submitRating(id, { stars: selectedStars });
+      setRatingMessage(data.message || 'Rating submitted successfully!');
+      loadRatingStatus();
+      loadSellerRating();
+    } catch (err) {
+      setRatingError(err.response?.data?.message || 'Could not submit rating.');
+    } finally {
+      setSubmittingRating(false);
+    }
+  };
 
   const handlePayNow = async () => {
     setPaying(true);
@@ -349,6 +403,16 @@ export default function AuctionDetail() {
           </div>
 
           <h1 className="auction-detail__title">{auction.title}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
+            <span className="field-hint" style={{ margin: 0 }}>Seller: <strong>@{auction.initiator_id}</strong></span>
+            {sellerRating && sellerRating.total_ratings > 0 ? (
+              <span className="rating-badge rating-badge--positive" title={`Wilson score rating based on ${sellerRating.positive_count}/${sellerRating.total_ratings} positive ratings`}>
+                ★ {sellerRating.wilson_percentage}% positive ({sellerRating.total_ratings} {sellerRating.total_ratings === 1 ? 'rating' : 'ratings'})
+              </span>
+            ) : (
+              <span className="rating-badge rating-badge--neutral">No seller ratings yet</span>
+            )}
+          </div>
           <p className="auction-detail__desc">{auction.description}</p>
 
           <div className="auction-detail__price-row">
@@ -513,8 +577,8 @@ export default function AuctionDetail() {
             </>
           )}
 
-          {/* Post-auction Mandatory Shipment Proof Section */}
-          {status === 'COMPLETED' && (
+          {/* Post-auction Mandatory Shipment Proof Section (Seller + Winning Buyer Only) */}
+          {status === 'COMPLETED' && (isOwner || isWinner) && (
             <div className="shipment-panel">
               <div className="shipment-panel__title">
                 <span>Shipment & Delivery Proof</span>
@@ -632,8 +696,8 @@ export default function AuctionDetail() {
                 </>
               )}
 
-              {/* Buyer / Public View */}
-              {!isOwner && (
+              {/* Buyer / Winner View */}
+              {!isOwner && isWinner && (
                 <>
                   {shipmentProof?.data ? (
                     <div>
@@ -673,6 +737,74 @@ export default function AuctionDetail() {
                     </div>
                   )}
                 </>
+              )}
+            </div>
+          )}
+
+          {/* Post-auction Seller Rating Section (Winning Bidder only) */}
+          {status === 'COMPLETED' && isWinner && (
+            <div className="rating-panel">
+              <div className="rating-panel__title">
+                <span>Rate the Seller</span>
+                {ratingStatus?.alreadyRated && (
+                  <span className="shipment-panel__badge">Rated</span>
+                )}
+              </div>
+
+              {ratingMessage && <div className="state-banner state-banner--info">{ratingMessage}</div>}
+              {ratingError && <div className="state-banner state-banner--error">{ratingError}</div>}
+
+              {ratingStatus === null ? (
+                <p className="state-loading">Loading rating status…</p>
+              ) : ratingStatus?.canRate && !ratingExpired ? (
+                <form onSubmit={handleRatingSubmit}>
+                  <p className="field-hint">
+                    How was your experience with seller <strong>@{auction.initiator_id}</strong>?
+                    {ratingCountdownLabel && (
+                      <> Rating window closes in: <strong>{ratingCountdownLabel}</strong> (5 hours post-auction window)</>
+                    )}
+                  </p>
+                  <div className="rating-stars-input">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        className={`star-btn ${star <= selectedStars ? 'star-btn--filled' : ''}`}
+                        onClick={() => setSelectedStars(star)}
+                        title={`${star} star${star > 1 ? 's' : ''}`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                    <span className="field-hint" style={{ marginLeft: 8 }}>
+                      {selectedStars} / 5 stars ({selectedStars >= 4 ? 'Positive 👍' : 'Negative 👎'})
+                    </span>
+                  </div>
+                  <button className="btn btn--primary btn--sm" type="submit" disabled={submittingRating}>
+                    {submittingRating ? 'Submitting…' : 'Submit seller rating'}
+                  </button>
+                </form>
+              ) : ratingStatus?.alreadyRated ? (
+                <div>
+                  <p className="field-hint">
+                    You rated this seller <strong>{ratingStatus.rating?.stars} / 5 stars</strong> on {new Date(ratingStatus.rating?.created_at).toLocaleDateString()}.
+                  </p>
+                  <div className="rating-stars-input">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span
+                        key={star}
+                        className={`star-btn ${star <= (ratingStatus.rating?.stars || 0) ? 'star-btn--filled' : ''}`}
+                        style={{ cursor: 'default' }}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="field-hint field-hint--error">
+                  The 5-hour rating window has closed for this auction.
+                </p>
               )}
             </div>
           )}
