@@ -127,8 +127,10 @@ export default function AuctionDetail() {
     if (!user) return;
     getMyRatingStatus(id)
       .then(({ data }) => setRatingStatus(data.data || data))
-      .catch(() => {});
-  }, [id, user]);
+      .catch(() => {
+        setRatingStatus({ canRate: isWinner, alreadyRated: false });
+      });
+  }, [id, user, isWinner]);
 
   const loadSellerRating = useCallback(() => {
     if (!auction?.initiator_id) return;

@@ -51,3 +51,13 @@ CREATE TABLE shipment_proofs (
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(auction_id)
 );ī
+
+CREATE TABLE IF NOT EXISTS ratings (
+    id SERIAL PRIMARY KEY,
+    auction_id INT NOT NULL REFERENCES auction(auction_id) ON DELETE CASCADE,
+    seller_id VARCHAR(50) NOT NULL,
+    buyer_id VARCHAR(50) NOT NULL,
+    stars SMALLINT NOT NULL CHECK (stars BETWEEN 1 AND 5),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(auction_id, buyer_id)
+);

@@ -68,24 +68,33 @@ export const submitRating = async (req, res) => {
         }
 
         // Check if already rated
-        const existingRating = await pool.query(
-            "SELECT id FROM ratings WHERE auction_id = $1 AND buyer_id = $2",
-            [id, currentUserId]
-        );
+        try {
+            const existingRating = await pool.query(
+                "SELECT id FROM ratings WHERE auction_id = $1 AND buyer_id = $2",
+                [id, currentUserId]
+            );
 
-        if (existingRating.rows.length > 0) {
-            return res.status(400).json({ message: "You already rated this seller for this auction" });
+            if (existingRating.rows.length > 0) {
+                return res.status(400).json({ message: "You already rated this seller for this auction" });
+            }
+
+            const insertRes = await pool.query(
+                "INSERT INTO ratings (auction_id, seller_id, buyer_id, stars) VALUES ($1, $2, $3, $4) RETURNING *",
+                [id, auction.initiator_id, currentUserId, stars]
+            );
+
+            return res.status(201).json({
+                message: "Rating submitted successfully",
+                data: insertRes.rows[0]
+            });
+        } catch (tableErr) {
+            if (tableErr.code === '42P01') {
+                return res.status(500).json({
+                    message: "Ratings table has not been created in PostgreSQL yet. Please run CREATE TABLE ratings."
+                });
+            }
+            throw tableErr;
         }
-
-        const insertRes = await pool.query(
-            "INSERT INTO ratings (auction_id, seller_id, buyer_id, stars) VALUES ($1, $2, $3, $4) RETURNING *",
-            [id, auction.initiator_id, currentUserId, stars]
-        );
-
-        return res.status(201).json({
-            message: "Rating submitted successfully",
-            data: insertRes.rows[0]
-        });
     } catch (err) {
         if (err.code === '23505') {
             return res.status(400).json({ message: "You already rated this seller for this auction" });
@@ -127,10 +136,17 @@ export const getMyRatingStatus = async (req, res) => {
         const winner = winningBidRes.rows.length > 0 ? winningBidRes.rows[0] : null;
         const isWinner = Boolean(winner && String(currentUserId) === String(winner.bidder_id));
 
-        const existingRatingRes = await pool.query(
-            "SELECT id, stars, created_at FROM ratings WHERE auction_id = $1 AND buyer_id = $2",
-            [id, currentUserId]
-        );
+        let existingRatingRes = { rows: [] };
+        try {
+            existingRatingRes = await pool.query(
+                "SELECT id, stars, created_at FROM ratings WHERE auction_id = $1 AND buyer_id = $2",
+                [id, currentUserId]
+            );
+        } catch (dbErr) {
+            if (dbErr.code !== '42P01') {
+                throw dbErr;
+            }
+        }
 
         const alreadyRated = existingRatingRes.rows.length > 0;
         const rating = alreadyRated ? existingRatingRes.rows[0] : null;
@@ -158,12 +174,19 @@ export const getSellerRating = async (req, res) => {
     const { userId } = req.params;
 
     try {
-        const ratingsRes = await pool.query(
-            "SELECT stars FROM ratings WHERE seller_id = $1",
-            [userId]
-        );
+        let rows = [];
+        try {
+            const ratingsRes = await pool.query(
+                "SELECT stars FROM ratings WHERE seller_id = $1",
+                [userId]
+            );
+            rows = ratingsRes.rows;
+        } catch (dbErr) {
+            if (dbErr.code !== '42P01') {
+                throw dbErr;
+            }
+        }
 
-        const rows = ratingsRes.rows;
         const totalCount = rows.length;
         const positiveCount = rows.filter((r) => r.stars >= 4).length;
         const negativeCount = totalCount - positiveCount;
@@ -197,17 +220,25 @@ export const getSellerRatingsBatch = async (req, res) => {
     }
 
     try {
-        const ratingsRes = await pool.query(
-            "SELECT seller_id, stars FROM ratings WHERE seller_id = ANY($1)",
-            [ids]
-        );
+        let rows = [];
+        try {
+            const ratingsRes = await pool.query(
+                "SELECT seller_id, stars FROM ratings WHERE seller_id = ANY($1)",
+                [ids]
+            );
+            rows = ratingsRes.rows;
+        } catch (dbErr) {
+            if (dbErr.code !== '42P01') {
+                throw dbErr;
+            }
+        }
 
         const ratingsBySeller = {};
         for (const id of ids) {
             ratingsBySeller[id] = [];
         }
 
-        for (const row of ratingsRes.rows) {
+        for (const row of rows) {
             if (ratingsBySeller[row.seller_id]) {
                 ratingsBySeller[row.seller_id].push(row.stars);
             }
