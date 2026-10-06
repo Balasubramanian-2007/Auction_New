@@ -72,9 +72,22 @@ export const io = new Server(server, {
 });
 
 // 3. Optional: Set up basic connection listener
+// io.on('connection', (socket) => {
+//     console.log(`User connected: ${socket.id}`);
+    
+//     socket.on('disconnect', () => {
+//         console.log(`User disconnected: ${socket.id}`);
+//     });
+// });
+
 io.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
-    
+
+    socket.on('join-auction', ({ auctionId }) => {
+        socket.join(`auction:${auctionId}`);
+        console.log(`Socket ${socket.id} joined room auction:${auctionId}`);
+    });
+
     socket.on('disconnect', () => {
         console.log(`User disconnected: ${socket.id}`);
     });
