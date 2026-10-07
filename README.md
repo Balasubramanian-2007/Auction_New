@@ -96,14 +96,5 @@ VITE_SOCKET_URL=http://localhost:3000
 ```
 
 ## Known limitations
-
-- Product images/videos are captured client-side but not yet uploaded to real cloud storage — this is stubbed pending a Multer + Cloudinary integration.
 - Payments are Razorpay **test mode only** — no real transactions are possible or intended.
 - No horizontal scaling consideration yet (single instance of each service, single Redis/Postgres).
-
-For Cloud storage for images/video :
-URL : https://console.cloudinary.com/
-
-
-
-
