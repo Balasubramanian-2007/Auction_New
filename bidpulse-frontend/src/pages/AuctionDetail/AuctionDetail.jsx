@@ -391,7 +391,30 @@ export default function AuctionDetail() {
   return (
     <div className="page container auction-detail">
       <div className="auction-detail__grid">
-        <div className="auction-detail__media" aria-hidden="true" />
+        <div className="auction-detail__media">
+          {auction.video_url ? (
+            <div className="auction-detail__media-wrap">
+              <video
+                src={auction.video_url}
+                poster={auction.image_url || undefined}
+                controls
+                className="auction-detail__video"
+              />
+              {auction.image_url && (
+                <div className="auction-detail__image-strip">
+                  <img src={auction.image_url} alt={auction.title} className="auction-detail__thumb" />
+                  <a href={auction.image_url} target="_blank" rel="noopener noreferrer" className="field-hint" style={{ textDecoration: 'underline' }}>
+                    View full image
+                  </a>
+                </div>
+              )}
+            </div>
+          ) : auction.image_url ? (
+            <img src={auction.image_url} alt={auction.title} className="auction-detail__img" />
+          ) : (
+            <div className="auction-detail__placeholder" aria-hidden="true" />
+          )}
+        </div>
 
         <div className="auction-detail__main">
           <div className="auction-detail__top">

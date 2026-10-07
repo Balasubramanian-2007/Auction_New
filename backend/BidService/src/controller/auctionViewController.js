@@ -7,6 +7,7 @@ const viewPublicAuctions = async(req,res)=>{
         const publicAuctionsList=await pool.query(
             `SELECT auction_id, title, description, initiator_id, starting_price, 
                     auction_type, status, start_time, end_time, created_at,
+                    image_url, video_url,
                     CASE 
                         WHEN start_time > NOW() THEN 'UPCOMING'
                         WHEN end_time > NOW() THEN 'LIVE'
@@ -65,6 +66,7 @@ const viewAllAuctionsAdmin = async(req,res)=>{
             `SELECT auction.auction_id, auction.title, auction.description,
                     auction.initiator_id, auction.starting_price, auction.auction_type,
                     auction.status, auction.start_time, auction.end_time, auction.created_at,
+                    auction.image_url, auction.video_url,
                     CASE
                         WHEN auction.status = 'CANCELLED' THEN 'CANCELLED'
                         WHEN auction.status = 'COMPLETED' THEN 'COMPLETED'
@@ -140,6 +142,7 @@ const getAuctionById = async (req, res) => {
         const auctionQuery = await pool.query(
             `SELECT auction_id, title, description, initiator_id, starting_price,
                     auction_type, status, start_time, end_time, created_at,
+                    image_url, video_url,
                     CASE
                         WHEN status = 'CANCELLED' THEN 'CANCELLED'
                         WHEN status = 'COMPLETED' THEN 'COMPLETED'
@@ -170,6 +173,7 @@ const getMyAuctions = async (req, res) => {
         const auctions = await pool.query(
             `SELECT auction_id, title, description, initiator_id, starting_price,
                     auction_type, status, start_time, end_time, created_at,
+                    image_url, video_url,
                     CASE
                         WHEN status = 'CANCELLED' THEN 'CANCELLED'
                         WHEN status = 'COMPLETED' THEN 'COMPLETED'

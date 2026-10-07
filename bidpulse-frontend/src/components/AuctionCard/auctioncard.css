@@ -14,6 +14,15 @@
 .auction-card__image {
   height: 150px;
   background: linear-gradient(135deg, var(--color-accent-soft), var(--color-gold-soft));
+  overflow: hidden;
+  position: relative;
+}
+
+.auction-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .auction-card__body {

@@ -10,7 +10,11 @@ export default function AuctionCard({ auction }) {
 
   return (
     <Link to={`/auctions/${auction.auction_id}`} className="auction-card">
-      <div className="auction-card__image" aria-hidden="true" />
+      <div className="auction-card__image">
+        {auction.image_url && (
+          <img src={auction.image_url} alt={auction.title} className="auction-card__img" />
+        )}
+      </div>
       <div className="auction-card__body">
         <div className="auction-card__top">
           <StatusBadge status={status} />

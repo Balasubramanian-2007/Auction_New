@@ -1,6 +1,7 @@
 import pool  from "../config/db.js";
 import redis from "../config/redis.js";
 import dotenv from 'dotenv';
+import { uploadBufferToCloudinary } from '../config/cloudinary.js';
 
 dotenv.config();
 
@@ -13,21 +14,6 @@ const createAuction=async(req,res)=>{
     const now = new Date();
 
     try{
-        // Debug logging
-        console.log("Create auction request received:");
-        console.log("  title:", title);
-        console.log("  description:", description);
-        console.log("  starting_price:", starting_price, "type:", typeof starting_price);
-        console.log("  auction_type:", auction_type);
-        console.log("  initiator_id:", initiator_id);
-        console.log("  start_time (input):", start_time);
-        console.log("  start_time (Date):", start.toISOString());
-        console.log("  end_time (input):", end_time);
-        console.log("  end_time (Date):", end.toISOString());
-
-        // if(start <= now){
-        //     return res.json({message:"Start Time must be Future"});
-        // }
         if (start.getTime() < now.getTime() - 60000) { 
             // Allows a 1-minute buffer for request latency
             return res.json({message:"Start Time must be Future"});
@@ -36,23 +22,38 @@ const createAuction=async(req,res)=>{
             return res.json({message:"Start Time must be lesser than End Time"});
         }
 
-        // Convert ISO strings to PostgreSQL format
-        // const startTimeForDB = start.toISOString().replace('T', ' ').replace('Z', '');
-        // const endTimeForDB = end.toISOString().replace('T', ' ').replace('Z', '');
+        const startTimeForDB = start.toISOString();
+        const endTimeForDB = end.toISOString();
 
-        // Pass native JS Date objects directly to pg driver
-        const startTimeForDB = start;
-        const endTimeForDB = end;
+        let image_url = null;
+        let video_url = null;
 
-        console.log("  Inserting with:");
-        console.log("    start_time (DB):", startTimeForDB);
-        console.log("    end_time (DB):", endTimeForDB);
+        // Upload photo to Cloudinary if provided
+        if (req.files?.photo?.[0]) {
+            const photoFile = req.files.photo[0];
+            const photoUpload = await uploadBufferToCloudinary(photoFile.buffer, {
+                folder: 'bidpulse/auctions/images',
+                resource_type: 'image',
+            });
+            image_url = photoUpload.secure_url;
+        }
+
+        // Upload video to Cloudinary if provided
+        if (req.files?.video?.[0]) {
+            const videoFile = req.files.video[0];
+            const videoUpload = await uploadBufferToCloudinary(videoFile.buffer, {
+                folder: 'bidpulse/auctions/videos',
+                resource_type: 'video',
+            });
+            video_url = videoUpload.secure_url;
+        }
 
         const newAuction=await pool.query(
-            "INSERT INTO auction(title,description,initiator_id,starting_price,auction_type,start_time,end_time,status) VALUES($1,$2,$3,$4,$5,$6,$7,'UPCOMING') RETURNING auction_id",
-            [title,description,initiator_id,starting_price,auction_type,startTimeForDB,endTimeForDB]
+            "INSERT INTO auction(title,description,initiator_id,starting_price,auction_type,start_time,end_time,status,image_url,video_url) VALUES($1,$2,$3,$4,$5,$6,$7,'UPCOMING',$8,$9) RETURNING auction_id, image_url, video_url",
+            [title,description,initiator_id,starting_price,auction_type,startTimeForDB,endTimeForDB,image_url,video_url]
         );
-        const auction_id=newAuction.rows[0].auction_id;
+        const createdAuction = newAuction.rows[0];
+        const auction_id=createdAuction.auction_id;
         
         // Fire-and-forget Redis operation - don't block if Redis is down
         redis.set(`auction:${auction_id}:high_bid`, starting_price).catch((redisErr) => {
@@ -61,6 +62,9 @@ const createAuction=async(req,res)=>{
         
         return res.status(201).json({
             message: "Auction scheduled successfully",
+            auction_id,
+            image_url: createdAuction.image_url,
+            video_url: createdAuction.video_url,
         });
     }
     catch(err){
@@ -69,7 +73,7 @@ const createAuction=async(req,res)=>{
         console.error("   Error Code:", err.code);
         console.error("   Error Detail:", err.detail);
         console.error("   Full Error:", JSON.stringify(err, null, 2));
-        return res.status(500).json({ message: "Internal Server Error during auction generation" });
+        return res.status(500).json({ message: "Internal Server Error during auction generation", error: err.message });
     }
 }
 const endAuctionManually = async (req, res) => {

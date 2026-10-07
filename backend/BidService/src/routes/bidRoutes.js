@@ -8,6 +8,7 @@ import { auctionHistory, getAuctionBidLog } from '../controller/bidHistoryContro
 import { watchRequest, getMyWatchlist } from '../controller/watchlistController.js';
 import { userJoinRequest, requestList, acceptUserRequest, updateParticipantStatus, getMyParticipationStatus, requestToWatch } from '../controller/JoinApprovalController.js';
 import { submitShipmentProof, getShipmentProof } from '../controller/shipmentController.js';
+import { uploadAuctionMedia } from '../middleware/upload.js';
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.get('/watchlist/mine', verifyToken, getMyWatchlist);
 router.get('/admin/auctions/all', verifyToken, isAdmin, viewAllAuctionsAdmin);
 
 // --- Auction creation & lifecycle ---
-router.post('/auctions/create', verifyToken, createAuction);
+router.post('/auctions/create', verifyToken, uploadAuctionMedia, createAuction);
 router.post('/auctions/:id/end', verifyToken, endAuctionManually);
 
 // --- Participation PUT routes MUST come before the generic /:id/:status admin route ---

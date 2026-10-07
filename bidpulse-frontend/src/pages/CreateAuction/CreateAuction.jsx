@@ -41,17 +41,21 @@ export default function CreateAuction() {
 
     setSubmitting(true);
     try {
-      // NOTE: photo/video are collected and previewed here, but not yet sent to
-      // the backend — `auction` has no image_url/video_url columns yet. Once
-      // cloud storage is wired up, this is where the upload + URL submission goes.
-      const { data } = await createAuction({
-        title: form.title,
-        description: form.description,
-        starting_price: Number(form.starting_price),
-        auction_type: form.auction_type,
-        start_time: new Date(form.start_time).toISOString(),
-        end_time: new Date(form.end_time).toISOString(),
-      });
+      const formData = new FormData();
+      formData.append('title', form.title);
+      formData.append('description', form.description);
+      formData.append('starting_price', form.starting_price);
+      formData.append('auction_type', form.auction_type);
+      formData.append('start_time', new Date(form.start_time).toISOString());
+      formData.append('end_time', new Date(form.end_time).toISOString());
+      if (photo) {
+        formData.append('photo', photo);
+      }
+      if (video) {
+        formData.append('video', video);
+      }
+
+      const { data } = await createAuction(formData);
 
       if (data.message === 'Auction scheduled successfully') {
         navigate('/my-auctions');
@@ -136,7 +140,7 @@ export default function CreateAuction() {
             </label>
           </div>
         </div>
-        <p className="field-hint">Media upload isn't connected to storage yet - it's captured here so the form is ready once that's wired up.</p>
+        <p className="field-hint">Upload a clear photo to showcase your item. Video is optional.</p>
 
         <button className="btn btn--primary auth-submit" type="submit" disabled={submitting}>
           {submitting ? 'Creating…' : 'Create auction'}
